@@ -86,9 +86,9 @@ def depthFirstSearch(problem: SearchProblem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    # print("Start:", problem.getStartState())
+    # print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     action_list=[]
     # action_list=["South", "South", "West", "South", "West", "West", "South", "West"]
     vis_stk=util.Stack()
@@ -110,8 +110,26 @@ def depthFirstSearch(problem: SearchProblem):
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # print("Start:", problem.getStartState())
+    # print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    action_list=[]
+    vis_que=util.Queue()
+    has_visited={}
+    vis_que.push((problem.getStartState(),[]))
+    has_visited[problem.getStartState()]=True
+    while True:
+        if vis_que.isEmpty():
+            break
+        cur_state, cur_actions=vis_que.pop()
+        if problem.isGoalState(cur_state):
+            action_list=cur_actions
+            break
+        for next_state,action,_ in problem.getSuccessors(cur_state):
+            if next_state not in has_visited:
+                vis_que.push((next_state,cur_actions+[action]))
+                has_visited[next_state]=True
+    return action_list
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""

@@ -6,6 +6,8 @@ PPCA AI 吃豆人项目
 
 [http://ai.berkeley.edu](http://ai.berkeley.edu)
 
+阅读材料：[AIMA，第 4 版](https://aima.cs.berkeley.edu/)。
+
 ## Week 1
 
 ### 环境配置
@@ -55,6 +57,12 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/f
 
 接下来，你将进入吃豆人的世界~
 
+简单介绍规则：
+
+- 吃豆人吃完所有豆子后胜利，被幽灵碰到则失败。
+- 吃豆人可以吃能量豆（大豆子），吃到后幽灵会在一段时间内进入惊恐状态（白色），此时可以吃幽灵。
+- 吃豆人在迷宫中停留时会不断扣分。
+
 ### Search
 
 相关文件和介绍在 [search](https://github.com/ACMClassCourse-2023/PPCA-AIPacMan-2024/tree/main/search) 文件夹下。
@@ -64,3 +72,7 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/f
 ### MultiAgent
 
 相关文件和介绍在 [multiagent](https://github.com/ACMClassCourse-2023/PPCA-AIPacMan-2024/tree/main/multiagent) 文件夹下。
+
+### Logic
+
+相关文件和介绍在 [logic](https://github.com/ACMClassCourse-2023/PPCA-AIPacMan-2024/tree/main/logic) 文件夹下。

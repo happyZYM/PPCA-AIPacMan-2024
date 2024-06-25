@@ -1,2 +1,5 @@
 multiagent1/
 __pycache__/
+/.vscode
+/.devcontainer
+/.github

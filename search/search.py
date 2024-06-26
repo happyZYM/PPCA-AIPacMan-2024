@@ -93,19 +93,57 @@ def depthFirstSearch(problem: SearchProblem):
     # action_list=["South", "South", "West", "South", "West", "West", "South", "West"]
     vis_stk=util.Stack()
     has_visited={}
-    vis_stk.push((problem.getStartState(),[]))
+    vis_stk.push(problem.getStartState())
+    # print(f'push {problem.getStartState()}')
     has_visited[problem.getStartState()]=True
+    nex_idx={}
+    nex_idx[problem.getStartState()]=0
+    best_actions={}
+    best_actions[problem.getStartState()]=[]
+    stored_successors={}
+    def SafelyFetchSuccessors(problem,stored_successors,state):
+        if state in stored_successors:
+            return stored_successors[state]
+        else:
+            stored_successors[state]=problem.getSuccessors(state)
+            return stored_successors[state]
     while True:
         if vis_stk.isEmpty():
             break
-        cur_state,cur_actions=vis_stk.pop()
+        cur_state=vis_stk.pop()
+        # print(f'pop {cur_state}')
+        cur_actions=best_actions[cur_state]
         if problem.isGoalState(cur_state):
             action_list=cur_actions
             break
-        for next_state,action,_ in problem.getSuccessors(cur_state):
-            if next_state not in has_visited:
-                vis_stk.push((next_state,cur_actions+[action]))
-                has_visited[next_state]=True
+        vis_stk.push(cur_state)
+        # print(f'push {cur_state}')
+        # successors=problem.getSuccessors(cur_state)
+        successors=SafelyFetchSuccessors(problem,stored_successors,cur_state)
+        # print(f"getting successors of {cur_state} with {successors}")
+        while nex_idx[cur_state]>=len(successors):
+            tmp=vis_stk.pop()
+            # print(f'pop {tmp}')
+            if vis_stk.isEmpty():
+                break
+            cur_state=vis_stk.pop()
+            # print(f'pop {cur_state}')
+            cur_actions=best_actions[cur_state]
+            vis_stk.push(cur_state)
+            # print(f'push {cur_state}')
+            # successors=problem.getSuccessors(cur_state)
+            successors=SafelyFetchSuccessors(problem,stored_successors,cur_state)
+            # print(f'getting successors of {cur_state} with {successors}')
+        if vis_stk.isEmpty():
+            break
+        next_state,action,_=successors[nex_idx[cur_state]]
+        nex_idx[cur_state]+=1
+        if next_state not in has_visited:
+            vis_stk.push(next_state)
+            # print(f'push {next_state}')
+            best_actions[next_state]=cur_actions+[action]
+            has_visited[next_state]=True
+            nex_idx[next_state]=0
     return action_list
 
 def breadthFirstSearch(problem: SearchProblem):
@@ -171,8 +209,35 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    kInf=1e100
+    action_list=[]
+    vis_que=util.PriorityQueue()
+    has_visited={}
+    vis_que.push(problem.getStartState(),heuristic(problem.getStartState(),problem))
+    dis={}
+    dis[problem.getStartState()]=0
+    best_actions={}
+    best_actions[problem.getStartState()]=[]
+    while True:
+        if vis_que.isEmpty():
+            break
+        cur_state=vis_que.pop()
+        cur_actions=best_actions[cur_state]
+        # print("cur_state:",cur_state, "cur cost=",dis[cur_state])
+        if problem.isGoalState(cur_state):
+            action_list=cur_actions
+            # print("minimal cost:",dis[cur_state])
+            break
+        if not cur_state in has_visited:
+            for next_state,action,cost in problem.getSuccessors(cur_state):
+                # print(f"next_state={next_state}")
+                # print(f"try update {next_state} with cost={dis[cur_state]+cost}")
+                if dis[cur_state]+cost<dis.get(next_state,kInf):
+                    vis_que.update(next_state,dis[cur_state]+cost+heuristic(next_state,problem))
+                    dis[next_state]=min(dis.get(next_state,kInf),dis[cur_state]+cost)
+                    best_actions[next_state]=cur_actions+[action]
+        has_visited[cur_state]=True
+    return action_list
 
 
 # Abbreviations

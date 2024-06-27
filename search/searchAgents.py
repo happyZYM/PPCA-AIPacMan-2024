@@ -473,8 +473,21 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    if foodGrid.count()==0:
+        return 0
+    closet_food_dis=1e100
+    closet_food=None
+    furthest_food_dis=-1e100
+    furthest_food=None
+    for food in foodGrid.asList():
+        dis=util.manhattanDistance(position,food)
+        if dis>furthest_food_dis:
+            furthest_food_dis=dis
+            furthest_food=food
+        if dis<closet_food_dis:
+            closet_food_dis=dis
+            closet_food=food
+    return util.manhattanDistance(position,closet_food)+util.manhattanDistance(closet_food,furthest_food)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"

@@ -86,7 +86,8 @@ class ReflexAgent(Agent):
         current_ghost_positions = currentGameState.getGhostPositions()
         current_ghost_scared_times = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
         not_scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]==0]
-        scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>0]
+        scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>0 and current_ghost_scared_times[i]<=1.2*util.manhattanDistance(current_ghost_positions[i],new_pos)+2]
+        edible_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>1.2*util.manhattanDistance(current_ghost_positions[i],new_pos)+2]
         current_self_position = currentGameState.getPacmanPosition()
         def DotProduct(a,b):
             return a[0]*b[0]+a[1]*b[1]
@@ -115,11 +116,12 @@ class ReflexAgent(Agent):
 
         da_for_foods=DistanceAnalysis(current_self_position,food_positions)
         if new_pos in currentGameState.getFood().asList():
-            da_for_foods=100
+            da_for_foods=200
         da_for_unscared_ghosts=DistanceAnalysis(current_self_position,not_scared_ghosts_positions,"Ghost")
         da_for_scared_ghosts=DistanceAnalysis(current_self_position,scared_ghosts_positions)
         da_for_capsules=DistanceAnalysis(current_self_position,capsules_position)
-        res=da_for_capsules*2-da_for_unscared_ghosts*2-da_for_scared_ghosts*0.2+da_for_foods*0.2
+        da_for_edible_ghosts=DistanceAnalysis(current_self_position,edible_ghosts_positions)
+        res=da_for_capsules*2-da_for_unscared_ghosts*2-da_for_scared_ghosts*0.2+da_for_foods*0.2+da_for_edible_ghosts
         res*=random.uniform(0.9, 1.1)
         # print(f"res:{res}")
         return res

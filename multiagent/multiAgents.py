@@ -13,7 +13,7 @@
 
 
 from util import manhattanDistance
-from game import Directions
+from game import Directions, Actions
 import random, util
 
 from game import Agent
@@ -68,14 +68,56 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
-        successorGameState = currentGameState.generatePacmanSuccessor(action)
-        newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
-        newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        # successorGameState = currentGameState.generatePacmanSuccessor(action)
+        # newPos = successorGameState.getPacmanPosition()
+        # newFood = successorGameState.getFood()
+        # newGhostStates = successorGameState.getGhostStates()
+        # newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        capsules_position = currentGameState.getCapsules()
+        food_positions = currentGameState.getFood().asList()
+        action_vec=Actions.directionToVector(action)
+        if action=="Stop":
+            return random.uniform(-0.2,0.2)
+        # print(f"action:{action}, action_vec:{action_vec}")
+        current_ghost_positions = currentGameState.getGhostPositions()
+        current_ghost_scared_times = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+        not_scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]==0]
+        scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>0]
+        current_self_position = currentGameState.getPacmanPosition()
+        def DotProduct(a,b):
+            return a[0]*b[0]+a[1]*b[1]
+        def CrossProduct(a,b):
+            return a[0]*b[1]-a[1]*b[0]
+        def EuclideanDistance(a,b):
+            return ((a[0]-b[0])**2+(a[1]-b[1])**2)**0.5
+        kInf=1e100
+        def DistanceAnalysis(current_self_position,object_postion_list,flag="None"):
+            if len(object_postion_list)==0:
+                return 0
+            if current_self_position in object_postion_list:
+                return kInf
+            res=0
+            for obj_pos in object_postion_list:
+                if flag=="Ghost" and util.manhattanDistance(current_self_position,obj_pos)>=5:
+                    continue
+                vec_to_obj=(obj_pos[0]-current_self_position[0],obj_pos[1]-current_self_position[1])
+                # print(f"vec_to_obj:{vec_to_obj}")
+                # print(f"action:{action}, action_vec:{action_vec}")
+                # print(f"EuclideanDistance(action_vec,(0,0)):{EuclideanDistance(action_vec,(0,0))}")
+                # print(f"EuclideanDistance(vec_to_obj,(0,0)): {EuclideanDistance(vec_to_obj,(0,0))}")
+                cos_theta=DotProduct(action_vec,vec_to_obj)/(EuclideanDistance(action_vec,(0,0))*EuclideanDistance(vec_to_obj,(0,0)))
+                distance_to_obj=EuclideanDistance(current_self_position,obj_pos)
+                res+=(cos_theta+1)/distance_to_obj
+            return res
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        da_for_foods=DistanceAnalysis(current_self_position,food_positions)
+        da_for_unscared_ghosts=DistanceAnalysis(current_self_position,not_scared_ghosts_positions,"Ghost")
+        da_for_scared_ghosts=DistanceAnalysis(current_self_position,scared_ghosts_positions)
+        da_for_capsules=DistanceAnalysis(current_self_position,capsules_position)
+        res=da_for_capsules*2-da_for_unscared_ghosts*2-da_for_scared_ghosts*0.2+da_for_foods*0.2
+        res*=random.uniform(0.9, 1.1)
+        # print(f"res:{res}")
+        return res
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """

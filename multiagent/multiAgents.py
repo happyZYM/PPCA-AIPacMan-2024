@@ -98,7 +98,7 @@ class ReflexAgent(Agent):
                 return kInf
             res=0
             for obj_pos in object_postion_list:
-                if flag=="Ghost" and util.manhattanDistance(current_self_position,obj_pos)>=5:
+                if flag=="Ghost" and util.manhattanDistance(current_self_position,obj_pos)>=6:
                     continue
                 vec_to_obj=(obj_pos[0]-current_self_position[0],obj_pos[1]-current_self_position[1])
                 # print(f"vec_to_obj:{vec_to_obj}")

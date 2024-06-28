@@ -68,11 +68,15 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
-        # successorGameState = currentGameState.generatePacmanSuccessor(action)
-        # newPos = successorGameState.getPacmanPosition()
+        kInf=1e100
+        successorGameState = currentGameState.generatePacmanSuccessor(action)
+        new_pos = successorGameState.getPacmanPosition()
         # newFood = successorGameState.getFood()
-        # newGhostStates = successorGameState.getGhostStates()
+        # new_ghost_states = successorGameState.getGhostStates()
+        new_ghost_positions = successorGameState.getGhostPositions()
         # newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        if new_pos in new_ghost_positions:
+            return -kInf
         capsules_position = currentGameState.getCapsules()
         food_positions = currentGameState.getFood().asList()
         action_vec=Actions.directionToVector(action)
@@ -90,7 +94,6 @@ class ReflexAgent(Agent):
             return a[0]*b[1]-a[1]*b[0]
         def EuclideanDistance(a,b):
             return ((a[0]-b[0])**2+(a[1]-b[1])**2)**0.5
-        kInf=1e100
         def DistanceAnalysis(current_self_position,object_postion_list,flag="None"):
             if len(object_postion_list)==0:
                 return 0
@@ -111,6 +114,8 @@ class ReflexAgent(Agent):
             return res
 
         da_for_foods=DistanceAnalysis(current_self_position,food_positions)
+        if new_pos in currentGameState.getFood().asList():
+            da_for_foods=100
         da_for_unscared_ghosts=DistanceAnalysis(current_self_position,not_scared_ghosts_positions,"Ghost")
         da_for_scared_ghosts=DistanceAnalysis(current_self_position,scared_ghosts_positions)
         da_for_capsules=DistanceAnalysis(current_self_position,capsules_position)

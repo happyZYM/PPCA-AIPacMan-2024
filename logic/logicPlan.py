@@ -135,22 +135,30 @@ def atLeastOne(literals: List[Expr]) -> Expr:
     >>> print(pl_true(atleast1,model2))
     True
     """
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    "*** END YOUR CODE HERE ***"
+    return disjoin(literals)
 
 
 def atMostOne(literals: List[Expr]) -> Expr:
     """
-    Given a list of Expr literals, return a single Expr instance in 
+    Given a list of CNF Expr literals, return a single Expr instance in 
     CNF (conjunctive normal form) that represents the logic that at most one of 
     the expressions in the list is true.
-    itertools.combinations may be useful here.
+    itertools.combinations is used here.
     """
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    "*** END YOUR CODE HERE ***"
-
+    clauses = []
+    
+    # Generate all pairs of literals
+    for pair in itertools.combinations(literals, 2):
+        # Create a clause that says "not both of these can be true"
+        clause = disjoin(~pair[0], ~pair[1])
+        clauses.append(clause)
+    
+    # If there are no clauses (i.e., 0 or 1 literal), return True
+    if not clauses:
+        return Expr('True')
+    
+    # Combine all clauses with AND
+    return conjoin(clauses)
 
 def exactlyOne(literals: List[Expr]) -> Expr:
     """
@@ -158,9 +166,9 @@ def exactlyOne(literals: List[Expr]) -> Expr:
     CNF (conjunctive normal form)that represents the logic that exactly one of 
     the expressions in the list is true.
     """
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    "*** END YOUR CODE HERE ***"
+    at_least_one = atLeastOne(literals)
+    at_most_one = atMostOne(literals)
+    return conjoin([at_least_one, at_most_one])
 
 #______________________________________________________________________________
 # QUESTION 3

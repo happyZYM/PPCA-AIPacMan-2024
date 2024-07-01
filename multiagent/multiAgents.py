@@ -161,6 +161,44 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
+    def MinMaxSearch(self,gameState: GameState,depth_remain:int,agentIndex:int) -> tuple[int, list[Actions]]:
+        if depth_remain==0:
+            # print(f"depth_remain:{depth_remain}")
+            # print(f"returning leaf {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        legal_actions = gameState.getLegalActions(agentIndex)
+        if len(legal_actions)==0:
+            # print(f"depth_remain:{depth_remain}")
+            # print(f"returning leaf {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        kInf=1e100
+        res_action=[]
+        res_val=0
+        if agentIndex==0:
+            # Max
+            res_val = -kInf
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.MinMaxSearch(successorGameState,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                if val>res_val:
+                    res_val=val
+                    # print(f"action:{action}, action_list:{action_list}")
+                    res_action=[action]+action_list
+        else:
+            # Mins
+            res_val = kInf
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.MinMaxSearch(successorGameState,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                if val<res_val:
+                    res_val=val
+                    res_action=[action]+action_list
+        # print(f"depth_remain:{depth_remain}")
+        # print(f"returning {res_val}, {res_action}")
+        return res_val,res_action
+
     def getAction(self, gameState: GameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -184,8 +222,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        stat = self.MinMaxSearch(gameState,self.depth,0)
+        print(f"stat:{stat}")
+        return stat[1][0]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """

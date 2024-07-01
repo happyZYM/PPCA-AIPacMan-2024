@@ -287,6 +287,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # print(f"stat:{stat}")
         return stat[1][0]
 
+last_score=0
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
@@ -312,6 +313,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 successorGameState = gameState.generateSuccessor(agentIndex,action)
                 nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
                 val,action_list=self.ExpectMaxSearch(successorGameState,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                if action=="Stop":
+                    val-=100
                 if val>res_val:
                     res_val=val
                     # print(f"action:{action}, action_list:{action_list}")
@@ -340,6 +343,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
+        global last_score
+        last_score=gameState.getScore()
         stat = self.ExpectMaxSearch(gameState,self.depth,0)
         # print(f"stat:{stat}")
         return stat[1][0]
@@ -351,8 +356,53 @@ def betterEvaluationFunction(currentGameState: GameState):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Useful information you can extract from a GameState (pacman.py)
+    if currentGameState.isLose():
+        return -500
+    if currentGameState.isWin():
+        return 500
+    kInf=1e100
+    capsules_position = currentGameState.getCapsules()
+    current_pos = currentGameState.getPacmanPosition()
+    food_positions = currentGameState.getFood().asList()
+    # print(f"action:{action}, action_vec:{action_vec}")
+    current_ghost_positions = currentGameState.getGhostPositions()
+    current_ghost_scared_times = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+    not_scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]==0]
+    scared_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>0 and current_ghost_scared_times[i]<=1.2*util.manhattanDistance(current_ghost_positions[i],current_pos)+2]
+    edible_ghosts_positions = [current_ghost_positions[i] for i in range(len(current_ghost_positions)) if current_ghost_scared_times[i]>1.2*util.manhattanDistance(current_ghost_positions[i],current_pos)+2]
+    current_self_position = currentGameState.getPacmanPosition()
+    def DotProduct(a,b):
+        return a[0]*b[0]+a[1]*b[1]
+    def CrossProduct(a,b):
+        return a[0]*b[1]-a[1]*b[0]
+    def EuclideanDistance(a,b):
+        return ((a[0]-b[0])**2+(a[1]-b[1])**2)**0.5
+    def DistanceAnalysis(current_self_position,object_postion_list,flag="None"):
+        if len(object_postion_list)==0:
+            return 0
+        if current_self_position in object_postion_list:
+            return kInf
+        res=0
+        for obj_pos in object_postion_list:
+            if flag=="Ghost" and util.manhattanDistance(current_self_position,obj_pos)>=6:
+                continue
+            distance_to_obj=util.manhattanDistance(current_self_position,obj_pos)
+            res=max(res,1/distance_to_obj)
+        return res
+
+    da_for_foods=DistanceAnalysis(current_self_position,food_positions)
+    da_for_unscared_ghosts=DistanceAnalysis(current_self_position,not_scared_ghosts_positions,"Ghost")
+    da_for_scared_ghosts=DistanceAnalysis(current_self_position,scared_ghosts_positions)
+    da_for_capsules=DistanceAnalysis(current_self_position,capsules_position)
+    da_for_edible_ghosts=DistanceAnalysis(current_self_position,edible_ghosts_positions)
+    res=da_for_capsules*2-da_for_unscared_ghosts*2-da_for_scared_ghosts*0.2+da_for_foods*0.2+da_for_edible_ghosts*1
+    # res*=random.uniform(0.9, 1.1)
+    res*=100
+    global last_score
+    res+=(currentGameState.getScore()-last_score)*10
+    # print(f"res:{res}")
+    return res
 
 # Abbreviation
 better = betterEvaluationFunction

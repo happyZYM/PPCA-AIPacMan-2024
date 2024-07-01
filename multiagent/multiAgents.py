@@ -223,20 +223,69 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         stat = self.MinMaxSearch(gameState,self.depth,0)
-        print(f"stat:{stat}")
+        # print(f"stat:{stat}")
         return stat[1][0]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
+    def AlphaBetaSearch(self,gameState: GameState,alpha,beta,depth_remain:int,agentIndex:int) -> tuple[int, list[Actions]]:
+        if alpha>beta:
+            raise ValueError("alpha should be less than beta")
+        legal_actions = gameState.getLegalActions(agentIndex)
+        if len(legal_actions)==0:
+            # print(f"depth_remain: leaf {depth_remain}, alpha:{alpha}, beta:{beta}")
+            # print(f"returning {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        if depth_remain==0:
+            # print(f"depth_remain: leaf {depth_remain}, alpha:{alpha}, beta:{beta}")
+            # print(f"returning {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        res_action=[]
+        res_val=0
+        kInf=1e100
+        if agentIndex==0:
+            # Max
+            res_val = -kInf
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.AlphaBetaSearch(successorGameState,alpha,beta,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                alpha=max(alpha,val)
+                # print(f"now alpha:{alpha}, beta:{beta}")
+                if val>res_val:
+                    res_val=val
+                    # print(f"action:{action}, action_list:{action_list}")
+                    res_action=[action]+action_list
+                if val>beta:
+                    break
+        else:
+            # Mins
+            res_val = kInf
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.AlphaBetaSearch(successorGameState,alpha,beta,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                beta=min(beta,val)
+                # print(f"now alpha:{alpha}, beta:{beta}")
+                if val<res_val:
+                    res_val=val
+                    res_action=[action]+action_list
+                if alpha>val:
+                    break
+        # print(f"depth_remain:{depth_remain}, alpha:{alpha}, beta:{beta}")
+        # print(f"returning {res_val}, {res_action}")
+        return res_val,res_action
 
     def getAction(self, gameState: GameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        kInf=1e100
+        stat = self.AlphaBetaSearch(gameState,-kInf,kInf,self.depth,0)
+        # print(f"stat:{stat}")
+        return stat[1][0]
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """

@@ -292,6 +292,47 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       Your expectimax agent (question 4)
     """
 
+    def ExpectMaxSearch(self,gameState: GameState,depth_remain:int,agentIndex:int) -> tuple[int, list[Actions]]:
+        if depth_remain==0:
+            # print(f"depth_remain:{depth_remain}")
+            # print(f"returning leaf {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        legal_actions = gameState.getLegalActions(agentIndex)
+        if len(legal_actions)==0:
+            # print(f"depth_remain:{depth_remain}")
+            # print(f"returning leaf {self.evaluationFunction(gameState)}, {[]}")
+            return self.evaluationFunction(gameState),[]
+        kInf=1e100
+        res_action=[]
+        res_val=0
+        if agentIndex==0:
+            # Max
+            res_val = -kInf
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.ExpectMaxSearch(successorGameState,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                if val>res_val:
+                    res_val=val
+                    # print(f"action:{action}, action_list:{action_list}")
+                    res_action=[action]+action_list
+        else:
+            # Mins
+            res_val = kInf
+            val_list=[]
+            for action in legal_actions:
+                successorGameState = gameState.generateSuccessor(agentIndex,action)
+                nxt_depth=depth_remain-1 if agentIndex==gameState.getNumAgents()-1 else depth_remain
+                val,action_list=self.ExpectMaxSearch(successorGameState,nxt_depth,(agentIndex+1)%gameState.getNumAgents())
+                val_list.append(val)
+                if val<res_val:
+                    res_val=val
+                    res_action=[action]+action_list
+            res_val=sum(val_list)/len(val_list)
+        # print(f"depth_remain:{depth_remain}")
+        # print(f"returning {res_val}, {res_action}")
+        return res_val,res_action
+
     def getAction(self, gameState: GameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
@@ -299,8 +340,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        stat = self.ExpectMaxSearch(gameState,self.depth,0)
+        # print(f"stat:{stat}")
+        return stat[1][0]
 
 def betterEvaluationFunction(currentGameState: GameState):
     """

@@ -412,9 +412,41 @@ def foodLogicPlan(problem) -> List:
 
     KB = []
 
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    "*** END YOUR CODE HERE ***"
+    # Initialize the food variables for time 0
+    for x, y in food:
+        KB.append(PropSymbolExpr(food_str, x, y, time=0))
+
+    # Initialize Pacman's start position at time 0
+    KB.append(PropSymbolExpr(pacman_str, x0, y0, time=0))
+
+    for t in range(50):
+        # Pacman is at exactly one non-wall position at time t
+        pacman_positions = [PropSymbolExpr(pacman_str, x, y, time=t) for x, y in non_wall_coords]
+        KB.append(exactlyOne(pacman_positions))
+
+        # Pacman takes exactly one action at time t
+        action_symbols = [PropSymbolExpr(action, time=t) for action in actions]
+        KB.append(exactlyOne(action_symbols))
+
+        if t > 0:
+            # Add transition models for each non-wall coordinate
+            for x, y in non_wall_coords:
+                KB.append(pacmanSuccessorAxiomSingle(x, y, t, walls))
+
+        # Add food successor axioms
+        for x, y in food:
+            food_t = PropSymbolExpr(food_str, x, y, time=t)
+            food_t1 = PropSymbolExpr(food_str, x, y, time=t+1)
+            pacman_t = PropSymbolExpr(pacman_str, x, y, time=t)
+            KB.append(food_t1 % (food_t & ~pacman_t))
+
+        # Goal assertion: all food is eaten
+        goal = conjoin([~PropSymbolExpr(food_str, x, y, time=t) for x, y in food])
+        model = findModel(conjoin(KB + [goal]))
+        if model:
+            return extractActionSequence(model, actions)
+
+    return []
 
 #______________________________________________________________________________
 # QUESTION 6

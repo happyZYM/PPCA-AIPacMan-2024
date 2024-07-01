@@ -397,6 +397,8 @@ def betterEvaluationFunction(currentGameState: GameState):
     da_for_capsules=DistanceAnalysis(current_self_position,capsules_position)
     da_for_edible_ghosts=DistanceAnalysis(current_self_position,edible_ghosts_positions)
     res=da_for_capsules*2-da_for_unscared_ghosts*2-da_for_scared_ghosts*0.2+da_for_foods*0.2+da_for_edible_ghosts*1
+    if da_for_unscared_ghosts<1/6:
+        res+=(da_for_foods*0.2+da_for_edible_ghosts*1)*5
     # res*=random.uniform(0.9, 1.1)
     res*=100
     global last_score

@@ -561,11 +561,34 @@ def slam(problem, agent) -> Generator:
             outer_wall_sent.append(PropSymbolExpr(wall_str, x, y))
     KB.append(conjoin(outer_wall_sent))
 
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    KB.append(PropSymbolExpr(pacman_str, pac_x_0, pac_y_0, time=0))
 
     for t in range(agent.num_timesteps):
-        "*** END YOUR CODE HERE ***"
+        pacphysics = pacphysicsAxioms(t, all_coords, non_outer_wall_coords, known_map, sensorModel=SLAMSensorAxioms,successorAxioms=SLAMSuccessorAxioms)
+        KB.append(pacphysics)
+        action_t = agent.actions[t]
+        KB.append(logic.PropSymbolExpr(action_t, time=t))
+        percepts=agent.getPercepts()
+        percept_rules=numAdjWallsPerceptRules(t,percepts)
+        KB.append(percept_rules)
+        possible_locations = []
+        for (x, y) in non_outer_wall_coords:
+            pacman_at_xy_t = logic.PropSymbolExpr(pacman_str, x, y, time=t)
+            if findModel(conjoin(KB + [pacman_at_xy_t])):
+                possible_locations.append((x, y))
+            if entails(conjoin(KB), pacman_at_xy_t):
+                KB.append(pacman_at_xy_t)
+            if entails(conjoin(KB), ~pacman_at_xy_t):
+                KB.append(~pacman_at_xy_t)
+        for x, y in non_outer_wall_coords:
+            # Check if (x, y) is a wall
+            if entails(conjoin(KB), PropSymbolExpr(wall_str, x, y)):
+                known_map[x][y] = 1
+                KB.append(PropSymbolExpr(wall_str, x, y))
+            elif entails(conjoin(KB), ~PropSymbolExpr(wall_str, x, y)):
+                known_map[x][y] = 0
+                KB.append(~PropSymbolExpr(wall_str, x, y))
+        agent.moveToNextState(action_t)
         yield (known_map, possible_locations)
 
 

@@ -268,23 +268,23 @@ def pacphysicsAxioms(t: int, all_coords: List[Tuple], non_outer_wall_coords: Lis
     """
     pacphysics_sentences = []
 
-    # 1. 对于所有坐标，如果有墙，则Pacman不在该位置
+    # For all coordinates, if there is a wall, then Pacman is not in that location.
     for x, y in all_coords:
         pacphysics_sentences.append(PropSymbolExpr(wall_str, x, y) >> ~PropSymbolExpr(pacman_str, x, y, time=t))
 
-    # 2. Pacman在t时刻恰好位于一个非外墙坐标
+    # At time t, Pacman is precisely located at a non-wall coordinate.
     pacman_locations = [PropSymbolExpr(pacman_str, x, y, time=t) for x, y in non_outer_wall_coords]
     pacphysics_sentences.append(exactlyOne(pacman_locations))
 
-    # 3. Pacman在t时刻恰好执行一个动作
+    # At time t, Pacman executes exactly one action.
     actions = [PropSymbolExpr(action, time=t) for action in DIRECTIONS]
     pacphysics_sentences.append(exactlyOne(actions))
 
-    # 4. 如果提供了sensorModel，则添加传感器公理
+    # If a sensor model is provided, add sensor axioms.
     if sensorModel:
         pacphysics_sentences.append(sensorModel(t, non_outer_wall_coords))
 
-    # 5. 如果提供了successorAxioms，则添加转移公理
+    # If successor axioms are provided, add transition axioms.
     if t!=0 and successorAxioms:
         pacphysics_sentences.append(successorAxioms(t, walls_grid, non_outer_wall_coords))
 
@@ -463,11 +463,31 @@ def localization(problem, agent) -> Generator:
 
     KB = []
 
-    "*** BEGIN YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Add information about walls to the KB
+    for x, y in all_coords:
+        if (x, y) in walls_list:
+            KB.append(logic.PropSymbolExpr(wall_str, x, y))
+        else:
+            KB.append(~logic.PropSymbolExpr(wall_str, x, y))
 
     for t in range(agent.num_timesteps):
-        "*** END YOUR CODE HERE ***"
+        pacphysics = pacphysicsAxioms(t, all_coords, non_outer_wall_coords, walls_grid, sensorModel=sensorAxioms,successorAxioms=allLegalSuccessorAxioms)
+        KB.append(pacphysics)
+        action_t = agent.actions[t]
+        KB.append(logic.PropSymbolExpr(action_t, time=t))
+        percepts=agent.getPercepts()
+        percept_rules=fourBitPerceptRules(t,percepts)
+        KB.append(percept_rules)
+        possible_locations = []
+        for (x, y) in non_outer_wall_coords:
+            pacman_at_xy_t = logic.PropSymbolExpr(pacman_str, x, y, time=t)
+            if findModel(conjoin(KB + [pacman_at_xy_t])):
+                possible_locations.append((x, y))
+            if entails(conjoin(KB), pacman_at_xy_t):
+                KB.append(pacman_at_xy_t)
+            if entails(conjoin(KB), ~pacman_at_xy_t):
+                KB.append(~pacman_at_xy_t)
+        agent.moveToNextState(action_t)
         yield possible_locations
 
 #______________________________________________________________________________
